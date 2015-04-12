@@ -7,7 +7,7 @@ titanicData <- read.csv("data/train.csv")
 # Filter relevant columns
 # Columns left out that may help: Ticket, Fare, Cabin, Embarked
 titanicData <- titanicData[c("PassengerId","Survived","Pclass","Sex",
-                             "Age","SibSp","Parch")]
+                             "Age","SibSp","Parch","Embarked")]
 
 # Convert variables to factor 
 titanicData$Survived <- as.factor(titanicData$Survived)
@@ -19,18 +19,29 @@ femaleAge <- median(titanicData$Age[titanicData$Sex=="female"], na.rm=TRUE)
 titanicData$Age[titanicData$Sex=="female" & is.na(titanicData$Age) ] <- femaleAge
 titanicData$Age[titanicData$Sex=="male" & is.na(titanicData$Age) ] <- maleAge
 
+# 
+
 # Save a copy of the original dataset after preprocessing but before tests
 originalData <- titanicData
 
 # Create trainning datasets
-inTrain <- createDataPartition(y = titanicData$Survived, p = 0.75, list = F)
+inTrain <- createDataPartition(y = titanicData$Survived, p = 0.8, list = F)
 trainning <- titanicData[inTrain,]
 testing <- titanicData[-inTrain,]
 
-# Fit first model
-modelFit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch,
+# Fit first model: rpart
+modelFit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Embarked,
                   data = titanicData,  
                   method=c("rpart"))
+
+# Test the model
+predictions <- predict(modelFit, newdata = testing)
+confusionMatrix(predictions, testing$Survived)
+
+# Fit second model: glm
+modelFit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Embarked,
+                  data = titanicData,  
+                  method=c("glm"))
 
 # Test the model
 predictions <- predict(modelFit, newdata = testing)
@@ -39,14 +50,14 @@ confusionMatrix(predictions, testing$Survived)
 
 # Now, gonna run the real thing.
 # Use the full dataset
-finalFit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch,
+finalFit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Embarked,
                   data = originalData,  
                   method=c("rpart"))
 
 # Load and preprocess data for the target set
 predictData <- read.csv("data/test.csv")
 predictData <- predictData[c("PassengerId","Pclass","Sex",
-                             "Age","SibSp","Parch")]
+                             "Age","SibSp","Parch","Embarked")]
 predictData$Pclass <- as.factor(predictData$Pclass)
 predictData$Age[predictData$Sex=="female" & is.na(predictData$Age) ] <- femaleAge
 predictData$Age[predictData$Sex=="male" & is.na(predictData$Age) ] <- maleAge
