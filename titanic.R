@@ -1,13 +1,16 @@
 # Predicting Titanic`s Death
 library("caret")
 
+# Seed: important for really comparing models
+set.seed(666)
+
 # Load data from Titanic data set
 titanicData <- read.csv("data/train.csv")
 
 # Filter relevant columns
 # Columns left out that may help: Ticket, Fare, Cabin, Embarked
 titanicData <- titanicData[c("PassengerId","Survived","Pclass","Sex",
-                             "Age","SibSp","Parch","Embarked")]
+                             "Age","SibSp","Parch","Embarked","Fare")]
 
 # Convert variables to factor 
 titanicData$Survived <- as.factor(titanicData$Survived)
@@ -18,8 +21,6 @@ maleAge   <- median(titanicData$Age[titanicData$Sex=="male"], na.rm=TRUE)
 femaleAge <- median(titanicData$Age[titanicData$Sex=="female"], na.rm=TRUE)
 titanicData$Age[titanicData$Sex=="female" & is.na(titanicData$Age) ] <- femaleAge
 titanicData$Age[titanicData$Sex=="male" & is.na(titanicData$Age) ] <- maleAge
-
-# 
 
 # Save a copy of the original dataset after preprocessing but before tests
 originalData <- titanicData
@@ -57,7 +58,7 @@ finalFit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Embarked,
 # Load and preprocess data for the target set
 predictData <- read.csv("data/test.csv")
 predictData <- predictData[c("PassengerId","Pclass","Sex",
-                             "Age","SibSp","Parch","Embarked")]
+                             "Age","SibSp","Parch","Embarked","Fare")]
 predictData$Pclass <- as.factor(predictData$Pclass)
 predictData$Age[predictData$Sex=="female" & is.na(predictData$Age) ] <- femaleAge
 predictData$Age[predictData$Sex=="male" & is.na(predictData$Age) ] <- maleAge
@@ -73,15 +74,6 @@ exportData$Survived[exportData$Survived == 2] <- 1
 
 # Save file
 write.csv(exportData, file="predictions.csv", row.names=F, quote=F)
-
-
-
-
-
-
-
-
-
 
 
 
